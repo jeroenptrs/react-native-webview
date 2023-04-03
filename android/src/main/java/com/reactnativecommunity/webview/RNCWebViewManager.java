@@ -199,11 +199,14 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     settings.setDomStorageEnabled(true);
     settings.setSupportMultipleWindows(true);
 
-    settings.setAllowFileAccess(false);
-    settings.setAllowContentAccess(false);
+    settings.setAllowFileAccess(true);
+    settings.setAllowContentAccess(true);
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-      settings.setAllowFileAccessFromFileURLs(false);
-      setAllowUniversalAccessFromFileURLs(webView, false);
+      settings.setAllowFileAccessFromFileURLs(true);
+      setAllowUniversalAccessFromFileURLs(webView, true);
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+      settings.setOffscreenPreRaster(true);
     }
     setMixedContentMode(webView, "never");
 
@@ -269,6 +272,11 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
 
   private String getLackPermissionToDownloadMessage() {
     return  mDownloadingMessage == null ? DEFAULT_LACK_PERMISSION_TO_DOWNLOAD_MESSAGE : mLackPermissionToDownloadMessage;
+  }
+
+  @ReactProp(name = "androidDebuggingEnabled")
+  public void setAndroidDebuggingEnabled(WebView view, boolean enabled) {
+    view.setWebContentsDebuggingEnabled(enabled);
   }
 
   @ReactProp(name = "javaScriptEnabled")
@@ -1095,6 +1103,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
         return;
       }
 
+      webView.stopLoading();
       super.onReceivedError(webView, errorCode, description, failingUrl);
       mLastLoadFailed = true;
 
@@ -1546,6 +1555,7 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     protected boolean hasScrollEvent = false;
     protected boolean nestedScrollEnabled = false;
     protected ProgressChangedFilter progressChangedFilter;
+    private float xDistance, yDistance, lastX, lastY;
 
     /**
      * WebView must be created with an context of the current activity
@@ -1598,7 +1608,39 @@ public class RNCWebViewManager extends SimpleViewManager<WebView> {
     public boolean onTouchEvent(MotionEvent event) {
       if (this.nestedScrollEnabled) {
         requestDisallowInterceptTouchEvent(true);
+        return super.onTouchEvent(event);
       }
+
+      // Allow scrolling inside ScrollView
+      if (event.findPointerIndex(0) == -1) {
+        return super.onTouchEvent(event);
+      }
+
+      try {
+        switch (event.getAction()) {
+          case MotionEvent.ACTION_DOWN:
+            xDistance = yDistance = 0f;
+            lastX = event.getX();
+            lastY = event.getY();
+            break;
+          case MotionEvent.ACTION_MOVE:
+            final float curX = event.getX();
+            final float curY = event.getY();
+            xDistance += Math.abs(curX - lastX);
+            yDistance += Math.abs(curY - lastY);
+            lastX = curX;
+            lastY = curY;
+
+            requestDisallowInterceptTouchEvent(!(xDistance > yDistance * 4));
+            break;
+        }
+      } catch(IllegalArgumentException e) {
+        // Log and ignore the error. This seems to be a bug in the android SDK and
+        // this is the commonly accepted workaround.
+        // https://tinyurl.com/mw6qkod (Stack Overflow)
+        return super.onTouchEvent(event);
+      }
+
       return super.onTouchEvent(event);
     }
 

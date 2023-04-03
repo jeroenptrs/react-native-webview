@@ -927,6 +927,11 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
    * @platform android
    */
   cacheMode?: CacheMode;
+  /**
+  * Enable debugging on Android for non-debug builds
+  * @platform android
+  */
+  androidDebuggingEnabled?: boolean;
 
   /**
    * https://developer.android.com/reference/android/view/View#OVER_SCROLL_NEVER
