@@ -92,6 +92,9 @@ export interface WebViewHttpError extends WebViewNativeEvent {
 export interface WebViewRenderProcessGoneDetail {
     didCrash: boolean;
 }
+export interface WebViewOpenWindow {
+    targetUrl: string;
+}
 export declare type WebViewEvent = NativeSyntheticEvent<WebViewNativeEvent>;
 export declare type WebViewProgressEvent = NativeSyntheticEvent<WebViewNativeProgressEvent>;
 export declare type WebViewNavigationEvent = NativeSyntheticEvent<WebViewNavigation>;
@@ -102,6 +105,7 @@ export declare type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
 export declare type WebViewTerminatedEvent = NativeSyntheticEvent<WebViewNativeEvent>;
 export declare type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
 export declare type WebViewRenderProcessGoneEvent = NativeSyntheticEvent<WebViewRenderProcessGoneDetail>;
+export declare type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
 export declare type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 export declare type DataDetectorTypes = 'phoneNumber' | 'link' | 'address' | 'calendarEvent' | 'trackingNumber' | 'flightNumber' | 'lookupSuggestion' | 'none' | 'all';
 export declare type OverScrollModeType = 'always' | 'content' | 'never';
@@ -225,6 +229,8 @@ export interface AndroidNativeWebViewProps extends CommonNativeWebViewProps {
     mixedContentMode?: 'never' | 'always' | 'compatibility';
     onContentSizeChange?: (event: WebViewEvent) => void;
     onRenderProcessGone?: (event: WebViewRenderProcessGoneEvent) => void;
+    onOpenWindow?: (event: WebViewOpenWindowEvent) => void;
+    hasOnOpenWindowEvent?: boolean;
     overScrollMode?: OverScrollModeType;
     saveFormDataDisabled?: boolean;
     setSupportMultipleWindows?: boolean;
@@ -267,6 +273,7 @@ export interface IOSNativeWebViewProps extends CommonNativeWebViewProps {
     scrollEnabled?: boolean;
     useSharedProcessPool?: boolean;
     onContentProcessDidTerminate?: (event: WebViewTerminatedEvent) => void;
+    onOpenWindow?: (event: WebViewOpenWindowEvent) => void;
     injectedJavaScriptForMainFrameOnly?: boolean;
     injectedJavaScriptBeforeContentLoadedForMainFrameOnly?: boolean;
     onFileDownload?: (event: FileDownloadEvent) => void;
@@ -507,6 +514,15 @@ export interface IOSWebViewProps extends WebViewSharedProps {
      */
     onContentProcessDidTerminate?: (event: WebViewTerminatedEvent) => void;
     /**
+     * Function that is invoked when the `WebView` should open a new window.
+     *
+     * This happens when the JS calls `window.open('http://someurl', '_blank')`
+     * or when the user clicks on a `<a href="http://someurl" target="_blank">` link.
+     *
+     * @platform ios
+     */
+    onOpenWindow?: (event: WebViewOpenWindowEvent) => void;
+    /**
      * If `true` (default), loads the `injectedJavaScript` only into the main frame.
      * If `false`, loads it into all frames (e.g. iframes).
      * @platform ios
@@ -745,6 +761,15 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
      * Works only on Android (minimum API level 26).
      */
     onRenderProcessGone?: (event: WebViewRenderProcessGoneEvent) => void;
+    /**
+     * Function that is invoked when the `WebView` should open a new window.
+     *
+     * This happens when the JS calls `window.open('http://someurl', '_blank')`
+     * or when the user clicks on a `<a href="http://someurl" target="_blank">` link.
+     *
+     * @platform android
+     */
+    onOpenWindow?: (event: WebViewOpenWindowEvent) => void;
     /**
      * https://developer.android.com/reference/android/webkit/WebSettings.html#setCacheMode(int)
      * Set the cacheMode. Possible values are:
